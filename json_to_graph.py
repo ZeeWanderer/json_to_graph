@@ -1,4 +1,3 @@
-# This is a sample Python script.
 import matplotlib.pyplot as plt
 import argparse
 import json
@@ -13,10 +12,11 @@ def dir_path(path):
         raise argparse.ArgumentTypeError(f"readable_dir:{path} is not a valid path")
 
 
-def normalize_coordinates(vertices: list[dict]):
+def normalize_coordinates(vertices: list[dict], area_size):
+    coord_space = area_size+1
     retval = list()
     for vertice in vertices:
-        retval.append([vertice["column"], -vertice["row"]])
+        retval.append([vertice["column"], coord_space-vertice["row"]])
     return retval
 
 
@@ -48,13 +48,14 @@ def main():
                 raw_json = json.load(raw_f)
             except Exception as e:
                 print(f"Json error: {raw_f_path}: {e}")
-                quit(-1)
-        vertices = normalize_coordinates(raw_json["vertices"])
+                continue
+        area_size = int(raw_json["area_size"])
+        vertices = normalize_coordinates(raw_json["vertices"], area_size)
+
+        x_points, y_points = zip(*vertices)
         edges = raw_json["edges"]
         title = raw_json["title"]
         color = raw_json["color"]  # For now unused
-
-        x_points, y_points = zip(*vertices)
 
         fig, ax = plt.subplots()
 
