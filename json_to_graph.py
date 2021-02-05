@@ -53,6 +53,10 @@ def main():
         vertices = normalize_coordinates(raw_json["vertices"], area_size)
 
         x_points, y_points = zip(*vertices)
+        max_coord = max(max(x_points), max(y_points))
+        if max_coord != area_size:
+            print(f"Json warning: {raw_f_path}: Maximum coordinate {max_coord} > area_size - area_size mismatch")
+
         edges = raw_json["edges"]
         title = raw_json["title"]
         color = raw_json["color"]  # For now unused
