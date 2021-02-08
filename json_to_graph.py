@@ -12,11 +12,12 @@ def dir_path(path):
         raise argparse.ArgumentTypeError(f"readable_dir:{path} is not a valid path")
 
 
-def normalize_coordinates(vertices: list[dict], area_size):
+def normalize_coordinates(vertices: list[dict], area_size, convert_to_positive=False):
     coord_space = area_size+1
     retval = list()
     for vertice in vertices:
-        retval.append([vertice["column"], coord_space-vertice["row"]])
+        y_coord = coord_space-vertice["row"] if convert_to_positive else -vertice["row"]
+        retval.append([vertice["column"], y_coord])
     return retval
 
 
@@ -49,6 +50,7 @@ def main():
             except Exception as e:
                 print(f"Json error: {raw_f_path}: {e}")
                 continue
+
         area_size = int(raw_json["area_size"])
         vertices = normalize_coordinates(raw_json["vertices"], area_size)
 
