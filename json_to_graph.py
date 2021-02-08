@@ -25,7 +25,7 @@ def normalize_coordinates(vertices: list[dict], area_size, convert_to_positive=F
 def main():
     global workdir_path, raw_files, exec_path
     parser = argparse.ArgumentParser("json_to_graph")
-    parser.add_argument('path', type=dir_path, help="path to directory containing jsons or path to json file.")
+    parser.add_argument('path', type=dir_path, help="path to directory containing jsons or path to json file, skipping")
 
     args = parser.parse_args()
 
@@ -75,6 +75,17 @@ def main():
             if len(t) != 2:
                 print(f"Json warning: {raw_f_path}: Loop edge detected")
 
+        try:
+            for edge in edges:
+                for vertex in edge:
+                    if not vertex < len(vertices):
+                        print(f"Json error: {raw_f_path}: Edge vertex index is out of bounds: {edge},"
+                              f" {vertex} > {len(vertices)-1}, skipping")
+                        raise Exception("error")
+        except:
+            continue
+
+        # PLOTTING
         fig, ax = plt.subplots()
 
         for edge in edges:
@@ -84,6 +95,7 @@ def main():
             y_ = [y_points[start], y_points[end]]
             ax.plot(x_, y_, color="black")
         ax.scatter(x_points, y_points)
+        
         plt.xticks(np.arange(0, area_size + 1, step=1))
         plt.yticks(np.arange(0, -area_size - 1, step=-1))
 
