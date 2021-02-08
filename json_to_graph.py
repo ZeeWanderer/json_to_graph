@@ -56,13 +56,24 @@ def main():
         vertices = normalize_coordinates(raw_json["vertices"], area_size)
 
         x_points, y_points = zip(*vertices)
-        max_coord = max(max(x_points), max(y_points))
-        if max_coord != area_size:
-            print(f"Json warning: {raw_f_path}: Maximum coordinate {max_coord} > area_size - area_size mismatch")
 
         edges = raw_json["edges"]
         title = raw_json["title"]
         color = raw_json["color"]  # For now unused
+
+        # VERIFICATION
+        # verify area_size
+        max_coord = max(max(x_points), max(y_points))
+        if max_coord != area_size:
+            print(f"Json warning: {raw_f_path}: Maximum coordinate {max_coord} > area_size - area_size mismatch")
+
+        # verify edges
+        tmp = set([frozenset(edge) for edge in edges])
+        if len(tmp) != len(edges):
+            print(f"Json warning: {raw_f_path}: Duplicate edges detected")
+        for t in tmp:
+            if len(t) != 2:
+                print(f"Json warning: {raw_f_path}: Loop edge detected")
 
         fig, ax = plt.subplots()
 
