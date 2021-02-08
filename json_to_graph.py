@@ -79,9 +79,9 @@ def main():
         try:
             for edge in edges:
                 for vertex in edge:
-                    if not vertex < len(vertices):
+                    if not 0 <= vertex < len(vertices):
                         print(f"Json error: {raw_f_path}: Edge vertex index is out of bounds: {edge},"
-                              f" {vertex} > {len(vertices) - 1}, skipping")
+                              f" vertex idx {vertex} is not in [0,{len(vertices)}), skipping")
                         raise Exception("error")
         except:
             continue
