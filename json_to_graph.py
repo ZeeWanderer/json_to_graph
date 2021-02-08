@@ -1,9 +1,10 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import argparse
 import json
 import os
-from os.path import join, dirname, abspath
+from os.path import dirname, abspath
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def dir_path(path):
@@ -14,10 +15,10 @@ def dir_path(path):
 
 
 def normalize_coordinates(vertices: list[dict], area_size, convert_to_positive=False):
-    coord_space = area_size+1
+    coord_space = area_size + 1
     retval = list()
     for vertice in vertices:
-        y_coord = coord_space-vertice["row"] if convert_to_positive else -vertice["row"]
+        y_coord = coord_space - vertice["row"] if convert_to_positive else -vertice["row"]
         retval.append([vertice["column"], y_coord])
     return retval
 
@@ -80,7 +81,7 @@ def main():
                 for vertex in edge:
                     if not vertex < len(vertices):
                         print(f"Json error: {raw_f_path}: Edge vertex index is out of bounds: {edge},"
-                              f" {vertex} > {len(vertices)-1}, skipping")
+                              f" {vertex} > {len(vertices) - 1}, skipping")
                         raise Exception("error")
         except:
             continue
@@ -95,7 +96,7 @@ def main():
             y_ = [y_points[start], y_points[end]]
             ax.plot(x_, y_, color="black")
         ax.scatter(x_points, y_points)
-        
+
         plt.xticks(np.arange(0, area_size + 1, step=1))
         plt.yticks(np.arange(0, -area_size - 1, step=-1))
 
