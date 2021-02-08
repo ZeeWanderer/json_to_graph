@@ -6,6 +6,8 @@ from os.path import dirname, abspath
 import matplotlib.pyplot as plt
 import numpy as np
 
+from log import *
+
 
 def dir_path(path):
     if os.path.isdir(path) or os.path.isfile(path):
@@ -25,6 +27,9 @@ def normalize_coordinates(vertices: list[dict], area_size, convert_to_positive=F
 
 def main():
     global workdir_path, raw_files, exec_path
+
+    os.system('color')
+
     parser = argparse.ArgumentParser("json_to_graph")
     parser.add_argument('path', type=dir_path, help="path to directory containing jsons or path to json file, skipping")
 
@@ -50,7 +55,8 @@ def main():
             try:
                 raw_json = json.load(raw_f)
             except Exception as e:
-                print(f"Json error: {raw_f_path}: {e}")
+                log_error(f"Json error: {raw_f_path}: {e}")
+                log_notice(f"Skipping {raw_f_path}")
                 continue
 
         area_size = int(raw_json["area_size"])
@@ -66,24 +72,26 @@ def main():
         # verify area_size
         max_coord = max(max(x_points), max(y_points))
         if max_coord != area_size:
-            print(f"Json warning: {raw_f_path}: Maximum coordinate {max_coord} > area_size - area_size mismatch")
+            log_warning(f"Json warning: {raw_f_path}:"
+                        f" Maximum coordinate {max_coord} > area_size - area_size mismatch")
 
         # verify edges
         tmp = set([frozenset(edge) for edge in edges])
         if len(tmp) != len(edges):
-            print(f"Json warning: {raw_f_path}: Duplicate edges detected")
+            log_warning(f"Json warning: {raw_f_path}: Duplicate edges detected")
         for t in tmp:
             if len(t) != 2:
-                print(f"Json warning: {raw_f_path}: Loop edge detected")
+                log_warning(f"Json warning: {raw_f_path}: Loop edge detected")
 
         try:
             for edge in edges:
                 for vertex in edge:
                     if not 0 <= vertex < len(vertices):
-                        print(f"Json error: {raw_f_path}: Edge vertex index is out of bounds: {edge},"
-                              f" vertex idx {vertex} is not in [0,{len(vertices)}), skipping")
+                        log_error(f"Json error: {raw_f_path}: Edge vertex index is out of bounds: {edge},"
+                                  f" {vertex} is not in [0,{len(vertices)})")
                         raise Exception("error")
         except:
+            log_notice(f"Skipping {raw_f_path}")
             continue
 
         # PLOTTING
