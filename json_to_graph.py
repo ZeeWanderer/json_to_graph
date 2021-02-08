@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import argparse
 import json
 import os
@@ -72,6 +73,8 @@ def main():
             y_ = [y_points[start], y_points[end]]
             ax.plot(x_, y_, color="black")
         ax.scatter(x_points, y_points)
+        plt.xticks(np.arange(0, area_size + 1, step=1))
+        plt.yticks(np.arange(0, -area_size - 1, step=-1))
 
         for idx, vertice in zip(range(0, len(vertices)), vertices):
             ax.annotate(str(idx), vertice, fontsize=16, color="red")
