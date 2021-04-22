@@ -64,24 +64,30 @@ def main():
 
         x_points, y_points = zip(*vertices)
 
-        edges = raw_json["edges"]
-        title = raw_json["title"]
-        color = raw_json["color"]  # For now unused
+        edges: list[list[int]] = raw_json["edges"]
+        title: str = raw_json["title"]
+        color: str = raw_json["color"]  # For now unused
 
         # VERIFICATION
         # verify area_size
         max_coord = max(max(x_points), max(y_points))
         if max_coord != area_size:
-            log_warning(f"Json warning: {raw_f_path}:"
-                        f" Maximum coordinate {max_coord} > area_size - area_size mismatch")
+            log_warning(f"Json warning: {raw_f_path}: "
+                        f"area_size mismatch: maximum coordinate {max_coord} > area_size")
 
         # verify edges
-        tmp = set([frozenset(edge) for edge in edges])
-        if len(tmp) != len(edges):
-            log_warning(f"Json warning: {raw_f_path}: Duplicate edges detected")
-        for t in tmp:
-            if len(t) != 2:
-                log_warning(f"Json warning: {raw_f_path}: Loop edge detected")
+        list_of_edge_sets = [frozenset(edge) for edge in edges]
+        set_of_edge_sets = set(list_of_edge_sets)
+        if len(set_of_edge_sets) != len(edges):
+            duplicate = list()
+            for edge_set in list_of_edge_sets:
+                if list_of_edge_sets.count(edge_set) > 1:
+                    duplicate.append(list(edge_set))
+            log_warning(f"Json warning: {raw_f_path}: Duplicate edges {duplicate} detected")
+        for edge_set in set_of_edge_sets:
+            if len(edge_set) != 2:
+                loop_vertex = next(iter(edge_set))
+                log_error(f"Json warning: {raw_f_path}: Loop edge [{loop_vertex}, {loop_vertex}] detected")
 
         try:
             for edge in edges:
@@ -113,6 +119,7 @@ def main():
 
         ax.set_title(title)
         fig.savefig(raw_f_path.replace(".json", ".png"))
+        plt.close(fig)
 
 
 if __name__ == '__main__':
