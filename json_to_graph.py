@@ -81,8 +81,9 @@ def main():
         if len(set_of_edge_sets) != len(edges):
             duplicate = list()
             for edge_set in list_of_edge_sets:
-                if list_of_edge_sets.count(edge_set) > 1:
-                    duplicate.append(list(edge_set))
+                edge = list(edge_set)
+                if list_of_edge_sets.count(edge_set) > 1 and edge not in duplicate:
+                    duplicate.append(edge)
             log_warning(f"Json warning: {raw_f_path}: Duplicate edges {duplicate} detected")
         for edge_set in set_of_edge_sets:
             if len(edge_set) != 2:
