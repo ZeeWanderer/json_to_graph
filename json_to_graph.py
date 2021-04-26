@@ -102,7 +102,8 @@ def main():
             continue
 
         # PLOTTING
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=[6.4, 6.4])
+        ax.set_aspect('equal', adjustable='box')
 
         for edge in edges:
             start = edge[0]
