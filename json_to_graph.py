@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import subprocess
 from os.path import dirname, abspath
 
 import matplotlib.pyplot as plt
@@ -32,8 +33,14 @@ def main():
 
     parser = argparse.ArgumentParser("json_to_graph")
     parser.add_argument('path', type=dir_path, help="path to directory containing jsons or path to json file, skipping")
+    parser.add_argument('-s', '--strip', action='store_true', help="strip warned data from json")
+    parser.add_argument('-o', '--optimize', action='store_true', help="optimize images")
+    parser.add_argument('--reindent', action='store_true', help="resave files with proper indent")
 
     args = parser.parse_args()
+    b_strip: bool = args.strip
+    b_reindent: bool = args.reindent
+    b_optimize: bool = args.optimize
 
     exec_path = dirname(abspath(__file__))
     raw_files = []
@@ -43,11 +50,12 @@ def main():
         for dirpath, dirs, filenames in os.walk(args.path):
             for f in filenames:
                 if f.endswith(".json"):
-                    raw_files.append(os.path.abspath(os.path.join(dirpath, f)))
+                    raw_files.append(abspath(os.path.join(dirpath, f)))
     else:
         raw_files.append(args.path)
-        workdir_path = os.path.dirname(args.path)
+        workdir_path = dirname(args.path)
 
+    image_files: list[str] = []
     # process files
     for raw_f_path in raw_files:
         raw_json = None
@@ -58,6 +66,8 @@ def main():
                 log_error(f"Json error: {raw_f_path}: {e}")
                 log_notice(f"Skipping {raw_f_path}")
                 continue
+
+        b_is_json_changed = False
 
         area_size = int(raw_json["area_size"])
         vertices = normalize_coordinates(raw_json["vertices"], area_size)
@@ -85,6 +95,13 @@ def main():
                 if list_of_edge_sets.count(edge_set) > 1 and edge not in duplicate:
                     duplicate.append(edge)
             log_warning(f"Json warning: {raw_f_path}: Duplicate edges {duplicate} detected")
+
+            if b_strip:  # strip duplicate edges
+                unduplicated_edges = [list(edge) for edge in list(set_of_edge_sets)]
+                raw_json["edges"] = unduplicated_edges
+                log_notice(F"{raw_f_path}: stripping duplicate edges...")
+                b_is_json_changed = True
+
         for edge_set in set_of_edge_sets:
             if len(edge_set) != 2:
                 loop_vertex = next(iter(edge_set))
@@ -100,6 +117,14 @@ def main():
         except:
             log_notice(f"Skipping {raw_f_path}")
             continue
+
+        if b_reindent or (b_strip and b_is_json_changed):  # save ganges after stripping or reindent
+            with open(raw_f_path, "w", encoding="utf8") as raw_f:
+                try:
+                    json.dump(raw_json, raw_f, indent="\t")
+                    log_success(f"saved: {raw_f_path}")
+                except:
+                    log_error(f"File error: {raw_f_path}: failed to save")
 
         # PLOTTING
         fig, ax = plt.subplots(figsize=[6.4, 6.4])
@@ -120,8 +145,18 @@ def main():
             ax.annotate(str(idx), vertice, fontsize=16, color="red")
 
         ax.set_title(title)
-        fig.savefig(raw_f_path.replace(".json", ".png"))
+        image_f_name = raw_f_path.replace(".json", ".png")
+        fig.savefig(image_f_name)
+        log_success(f"saved: {image_f_name}")
+        image_files.append(image_f_name)
         plt.close(fig)
+
+    if b_optimize:
+        png_optimizer = abspath("./bin/PngOptimizerCL.exe")
+        log_notice("Running PngOptimizer on output images")
+        pngo = subprocess.Popen([png_optimizer] + image_files, stdout=subprocess.PIPE)
+        for line in pngo.stdout:
+            print(line)
 
 
 if __name__ == '__main__':
